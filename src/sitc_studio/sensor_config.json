@@ -1,0 +1,70 @@
+{
+    "sensors": [
+        {
+            "sensor_id": "E1",
+            "sensor_sn": "000011513712",
+            "location": "Entrance",
+            "master": true
+        },
+        {
+            "sensor_id": "W1",
+            "sensor_sn": "000383721512",
+            "location": "Sink",
+            "master": true
+        },
+        {
+            "sensor_id": "F1",
+            "sensor_sn": "000471221512",
+            "location": "Bath",
+            "master": true
+        },
+        {
+            "sensor_id": "K1",
+            "sensor_sn": "000501114612",
+            "location": "Kitchen",
+            "master": true
+        },
+        {
+            "sensor_id": "K2",
+            "sensor_sn": "000603521612",
+            "location": "Kitchen",
+            "master": false
+        },
+        {
+            "sensor_id": "D1",
+            "sensor_sn": "000628513012",
+            "location": "Dining",
+            "master": true
+        },
+        {
+            "sensor_id": "D2",
+            "sensor_sn": "000086715312",
+            "location": "Dining",
+            "master": false
+        },
+        {
+            "sensor_id": "L1",
+            "sensor_sn": "000823115112",
+            "location": "Living",
+            "master": true
+        },
+        {
+            "sensor_id": "L2",
+            "sensor_sn": "000826515112",
+            "location": "Living",
+            "master": false
+        },
+        {
+            "sensor_id": "B1",
+            "sensor_sn": "000916515112",
+            "location": "Bedroom",
+            "master": true
+        },
+        {
+            "sensor_id": "B2",
+            "sensor_sn": "000920315112",
+            "location": "Bedroom",
+            "master": false
+        }
+    ]
+}
