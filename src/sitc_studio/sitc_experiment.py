@@ -27,7 +27,7 @@ class Progress:
         self.current_activity = activity
         self.current_sensor = Kinect.from_activity(self.participant_id, activity, self.save_loc)
         self.current_step = self.recording_loop.next()
-
+        
         if self.current_step == 'explain':
             self.explain()
         elif self.current_step == 'record':
@@ -35,7 +35,13 @@ class Progress:
     
     def explain(self):
         """Idling while the participant receives and explanation of the next activity"""
-        inp = raw_input("The next activity is {}. Explain the activity to the participant and answer any questions.\nType 'a' to abort, or press any other key to continue...".format(self.current_activity.name))
+        print("ACTIVITY: {}".format(self.current_activity.name))
+        print("LOCATION: {}".format(self.current_activity.location))
+        print("SENSOR: {}".format(self.current_sensor.sensor_id))
+        if self.current_sensor.synced:
+            print("SENSOR: {}".format(self.current_sensor.sub_sensor.sensor_id))
+
+        inp = raw_input("The next activity is {}. Explain the activity to the participant and answer any questions.\nType 'a' to abort, or press any other key to start recording...".format(self.current_activity.name))
 
         if inp == 'a':
             return ExperimentalState.ABORT
@@ -44,15 +50,7 @@ class Progress:
 
     def record(self):
         """Record the current state"""
-        print("ACTIVITY: {}".format(self.current_activity.name))
-        print("LOCATION: {}".format(self.current_activity.location))
-
-        print("SENSOR: {}".format(self.current_sensor.sensor_id))
         self.current_sensor.start()
-
-        # stop recording on CTRL^C
-        self.current_sensor.stop()
-        print("Recording stopped.")
 
         raw_input("Press any key to continue...")
         return ExperimentalState.RECORD
@@ -132,7 +130,7 @@ class Experiment:
     
     @classmethod
     def from_participant_id(cls, participant_id):
-        # TODO: check if participant id exists. if yet, then we are resuming an experiment
+        # TODO: check if participant id exists. if yes, then we are resuming an experiment
         # if not, we are starting a new experiment
         return cls(Configuration.from_start(participant_id), init_sequence([a for a in Activity], None))
     
@@ -147,6 +145,7 @@ class Experiment:
 
     def next(self):
         next_activity = self.activity_sequence.next()
+        print("NEXT ACTIVITY: {}".format(next_activity))
 
         if next_activity is None:
             self.state = ExperimentalState.COMPLETE

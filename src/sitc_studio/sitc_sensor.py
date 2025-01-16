@@ -4,11 +4,13 @@ import os
 import json
 import rospy
 import rosbag
+import threading
 
 from std_msgs.msg import String
 
 class Kinect(object):
     SENSOR_CONFIG_FILE = "/media/ubi-lab-desktop/Extreme Pro/kinect/sitc_ws/src/sitc_ak_controller/src/sitc_studio/sensor_config.json"
+    TOPICS_FILE = "/media/ubi-lab-desktop/Extreme Pro/kinect/sitc_ws/src/sitc_ak_controller/src/sitc_studio/topics.txt"
 
     def __init__(self, participant_id, sensor_id, sensor_sn, activity, location, save_loc, synced=False):
         self.participant_id = participant_id
@@ -18,12 +20,20 @@ class Kinect(object):
         self.activity = activity
         self.location = location
         self.save_loc = save_loc
-        self.sub_sensor = None
+        self.bag_name = "%s/Person%03d/%s_%s.bag" % (self.save_loc, self.participant_id, self.sensor_id, self.activity.description)
         self.synced = synced
 
-        # TODO: might need to change this if we are only collecting raw data
-        self.topic = "/{}/body_tracking_data".format(sensor_id)
-        self.subscriber = None
+        if self.synced:
+            self.sub_sensor = KinectSub.from_master(self)
+
+        self.is_recording = False
+        self.lock = threading.Lock()
+
+        with open(self.TOPICS_FILE) as f:
+            topics = json.load(f)
+        self.topics = ["/%s/%s" % (self.sensor_id, topic) for topic in topics]
+        self.subscribers = []
+        self.bag = None
 
     
     @classmethod
@@ -48,37 +58,49 @@ class Kinect(object):
         if not os.path.exists("%s/Person%03d" % (self.save_loc, self.participant_id)):
             os.makedirs("%s/Person%03d" % (self.save_loc, self.participant_id))
 
-        self.bag = rosbag.Bag("%s/Person%03d/%s_%s.bag" % (self.save_loc, self.participant_id, self.sensor_id, self.activity.description), 'w')
-        self.bag.close()
+        self.bag = rosbag.Bag(self.bag_name, 'w')
+        self.is_recording = True
+        
         # TODO: adapt the data type according to the format we need
-        self.subscriber = rospy.Subscriber(self.topic, String, self.callback)
+        for topic in self.topics:
+            self.subscribers.append(rospy.Subscriber(topic, String, self.callback))
         
         if self.synced:
-            self.sub_sensor = KinectSub.from_master(self)
-            print("SUB-SENSOR: {}".format(self.sub_sensor.sensor_id))
-            self.sub_sensor.subscriber = rospy.Subscriber(self.sub_sensor.topic, String, self.sub_sensor.callback)
+            self.sub_sensor.is_recording = True
+            self.sub_sensor.bag = rosbag.Bag(self.sub_sensor.bag_name, 'w')
 
-        print("Starting recording. Press CTRL^C to stop.")
+            for topic in self.sub_sensor.topics:
+                self.sub_sensor.subscribers.append(rospy.Subscriber(topic, String, self.sub_sensor.callback))
 
-        rospy.spin()
+        while True:
+            key = raw_input("Press 'q' to stop recording: ")
+            if key.lower() == 'q':
+                break
         
-
+        self.stop()
+        
+        
     def callback(self, data):
         """Callback function for the ROS subscriber. Store the data in a rosbag"""
-        self.bag.open()
-        try:
-            self.bag.write(self.topic, data)
-        finally:
-            self.bag.close()
+        if self.is_recording and self.bag:
+            with self.lock:
+                self.bag.write(self.topic, data)
+
 
     def stop(self):
         """Stop the ROS subscriber"""
-        self.subscriber.unregister()
-        self.subscriber = None
+        self.is_recording = False
+        for subscriber in self.subscribers:
+            subscriber.unregister()
+        self.subscribers = []
 
         if self.synced:
             self.sub_sensor.stop()
             self.sub_sensor = None
+            
+        self.bag.close()
+        self.bag = None
+        print("SENSOR {}: Recording for {} saved to {}".format(self.sensor_id, self.activity.description, self.bag_name))
 
 class KinectSub(Kinect):
     def __init__(self, participant_id, master_id, sensor_id, sensor_sn, activity, location, save_loc, synced=False):

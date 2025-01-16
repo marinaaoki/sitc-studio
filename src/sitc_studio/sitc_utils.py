@@ -12,7 +12,7 @@ def init_sequence(activities, selectors):
 
 
 def init_recording_loop(start_mode):
-    states = ['explain', 'record', 'stop']
+    states = ['explain', 'record']
     if start_mode not in states:
         raise ValueError("Invalid start mode. Must be one of {}".format(states))
 
