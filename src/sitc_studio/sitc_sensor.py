@@ -10,7 +10,6 @@ from std_msgs.msg import String
 
 class Kinect(object):
     SENSOR_CONFIG_FILE = "/media/ubi-lab-desktop/Extreme Pro/kinect/sitc_ws/src/sitc_ak_controller/src/sitc_studio/sensor_config.json"
-    TOPICS_FILE = "/media/ubi-lab-desktop/Extreme Pro/kinect/sitc_ws/src/sitc_ak_controller/src/sitc_studio/topics.txt"
 
     def __init__(self, participant_id, sensor_id, sensor_sn, activity, location, save_loc, synced=False):
         self.participant_id = participant_id
@@ -29,10 +28,9 @@ class Kinect(object):
         self.is_recording = False
         self.lock = threading.Lock()
 
-        with open(self.TOPICS_FILE) as f:
-            topics = json.load(f)
-        self.topics = ["/%s/%s" % (self.sensor_id, topic) for topic in topics]
-        self.subscribers = []
+        # TODO: need to change this since we are only collecting raw data
+        self.topic = "/{}/body_tracking_data".format(sensor_id)
+        self.subscriber = None
         self.bag = None
 
     
@@ -62,15 +60,12 @@ class Kinect(object):
         self.is_recording = True
         
         # TODO: adapt the data type according to the format we need
-        for topic in self.topics:
-            self.subscribers.append(rospy.Subscriber(topic, String, self.callback))
+        self.subscriber = rospy.Subscriber(self.topic, String, self.callback)
         
         if self.synced:
             self.sub_sensor.is_recording = True
             self.sub_sensor.bag = rosbag.Bag(self.sub_sensor.bag_name, 'w')
-
-            for topic in self.sub_sensor.topics:
-                self.sub_sensor.subscribers.append(rospy.Subscriber(topic, String, self.sub_sensor.callback))
+            self.sub_sensor.subscriber = rospy.Subscriber(self.sub_sensor.topic, String, self.sub_sensor.callback)
 
         while True:
             key = raw_input("Press 'q' to stop recording: ")
@@ -90,9 +85,8 @@ class Kinect(object):
     def stop(self):
         """Stop the ROS subscriber"""
         self.is_recording = False
-        for subscriber in self.subscribers:
-            subscriber.unregister()
-        self.subscribers = []
+        self.subscriber.unregister()
+        self.subscriber = None
 
         if self.synced:
             self.sub_sensor.stop()
