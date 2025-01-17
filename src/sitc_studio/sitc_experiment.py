@@ -151,12 +151,15 @@ class Experiment:
         pass
 
     def next(self):
-        next_activity = self.activity_sequence.next()
+        try:
+            next_activity = self.activity_sequence.next()
+        except StopIteration:
+            next_activity = None
 
         if next_activity is None:
             self.state = ExperimentalState.COMPLETE
-            self.configuration.update(self.state)
-            return
+            self.configuration.update(self.state, self.progress)
+            return self.state
 
         self.state = self.progress.next(next_activity)
         self.configuration.update(self.state, self.progress)
