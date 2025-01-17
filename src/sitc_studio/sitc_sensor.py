@@ -1,4 +1,4 @@
-from sitc_studio.sitc_objects import Location
+from sitc_studio.sitc_objects import Location, SENSOR_CONFIG_FILE, TOPICS_FILE, TOPIC_TYPES
 
 import os
 import json
@@ -6,10 +6,8 @@ import rospy
 import rosbag
 import threading
 
-from std_msgs.msg import String
-
 class Kinect(object):
-    SENSOR_CONFIG_FILE = "/media/ubi-lab-desktop/Extreme Pro/kinect/sitc_ws/src/sitc_ak_controller/src/sitc_studio/sensor_config.json"
+    
 
     def __init__(self, participant_id, sensor_id, sensor_sn, activity, location, save_loc, synced=False):
         self.participant_id = participant_id
@@ -19,7 +17,7 @@ class Kinect(object):
         self.activity = activity
         self.location = location
         self.save_loc = save_loc
-        self.bag_name = "%s/Person%03d/%s_%s.bag" % (self.save_loc, self.participant_id, self.sensor_id, self.activity.description)
+        self.bag_name_app = "%s/Person%03d/%s_%s" % (self.save_loc, self.participant_id, self.sensor_id, self.activity.description)
         self.synced = synced
 
         if self.synced:
@@ -28,10 +26,12 @@ class Kinect(object):
         self.is_recording = False
         self.lock = threading.Lock()
 
-        # TODO: need to change this since we are only collecting raw data
-        self.topic = "/{}/body_tracking_data".format(sensor_id)
-        self.subscriber = None
-        self.bag = None
+        with open(TOPICS_FILE) as f:
+            topic_config = json.load(f)
+
+        self.topics = {topic["topic_name"]: topic["topic_type"] for topic in topic_config["topics"]}
+        self.subscribers = []
+        self.bags = []
 
     
     @classmethod
@@ -41,7 +41,7 @@ class Kinect(object):
         if location != Location.BATH and location != Location.ENTRANCE and location != Location.SINK:
             synced = True
 
-        with open(cls.SENSOR_CONFIG_FILE) as f:
+        with open(SENSOR_CONFIG_FILE) as f:
             sensor_config = json.load(f)
         master_device = filter(lambda x: x['location'] == location.description and x['master'], sensor_config["sensors"])[0]
 
@@ -53,48 +53,50 @@ class Kinect(object):
     
     def start(self):
         """Launch the ROS subscriber for this Kinect sensor topic"""
-        if not os.path.exists("%s/Person%03d" % (self.save_loc, self.participant_id)):
-            os.makedirs("%s/Person%03d" % (self.save_loc, self.participant_id))
+        if not os.path.exists("%s" % self.bag_name_app):
+            os.makedirs("%s" % self.bag_name_app)
 
-        self.bag = rosbag.Bag(self.bag_name, 'w')
         self.is_recording = True
         
-        # TODO: adapt the data type according to the format we need
-        self.subscriber = rospy.Subscriber(self.topic, String, self.callback)
+        for topic, topic_type in self.topics.items():
+            topic_name = topic.split('/')[-1]
+            topic_type = TOPIC_TYPES[topic_type]
+            bag = rosbag.Bag("%s/%s.bag" % (self.bag_name_app, topic_name), 'w')
+            self.bags.append(bag)
+            sensor_topic = "/%s/%s" % (self.sensor_id.lower(), topic)
+            subscriber = rospy.Subscriber(sensor_topic, topic_type, self.callback, callback_args=topic)
+            self.subscribers.append(subscriber)
         
         if self.synced:
-            self.sub_sensor.is_recording = True
-            self.sub_sensor.bag = rosbag.Bag(self.sub_sensor.bag_name, 'w')
-            self.sub_sensor.subscriber = rospy.Subscriber(self.sub_sensor.topic, String, self.sub_sensor.callback)
-
-        while True:
-            key = raw_input("Press 'q' to stop recording: ")
-            if key.lower() == 'q':
-                break
-        
-        self.stop()
+            self.sub_sensor.start()
         
         
-    def callback(self, data):
+    def callback(self, data, topic):
         """Callback function for the ROS subscriber. Store the data in a rosbag"""
-        if self.is_recording and self.bag:
+        bag = self.bags[self.topics.keys().index(topic)]
+
+        if self.is_recording and bag:
             with self.lock:
-                self.bag.write(self.topic, data)
+                bag.write(topic, data)
 
 
     def stop(self):
         """Stop the ROS subscriber"""
         self.is_recording = False
-        self.subscriber.unregister()
-        self.subscriber = None
+
+        for subscriber in self.subscribers:
+            subscriber.unregister()
+        self.subscribers = []
+
+        for bag in self.bags:
+            bag.close()
+        self.bags = []
 
         if self.synced:
             self.sub_sensor.stop()
-            self.sub_sensor = None
-            
-        self.bag.close()
-        self.bag = None
-        print("SENSOR {}: Recording for {} saved to {}".format(self.sensor_id, self.activity.description, self.bag_name))
+
+        print("SENSOR {}: Recording for {} saved to {}".format(self.sensor_id, self.activity.description, self.bag_name_app))
+
 
 class KinectSub(Kinect):
     def __init__(self, participant_id, master_id, sensor_id, sensor_sn, activity, location, save_loc, synced=False):
@@ -107,7 +109,7 @@ class KinectSub(Kinect):
         activity = master_kinect.activity
         location = master_kinect.location
         
-        sensor_config = json.load(open(cls.SENSOR_CONFIG_FILE))
+        sensor_config = json.load(open(SENSOR_CONFIG_FILE))
         sub_device = filter(lambda x: x['location'] == location.description and not x['master'], sensor_config["sensors"])[0]
 
         sensor_id = sub_device['sensor_id']

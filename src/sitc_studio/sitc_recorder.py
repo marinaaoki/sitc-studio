@@ -81,12 +81,11 @@ class SmartHomeStudio:
     def recording_loop(self):
         """Main loop for the recording process"""
         while not rospy.is_shutdown():
-            print("experiment.next()...")
-            self.experiment.next()
-            if self.experiment.state == ExperimentalState.COMPLETE:
-                print("Experiment finished.")
-                break
-            elif self.experiment.state == ExperimentalState.ABORT:
+            ret = self.experiment.next()
+            if ret == ExperimentalState.ABORT:
                 print("Experiment aborted.")
+                break
+            elif ret == ExperimentalState.COMPLETE:
+                print("Experiment finished.")
                 break
         

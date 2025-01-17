@@ -29,7 +29,7 @@ class Progress:
         self.current_step = self.recording_loop.next()
         
         if self.current_step == 'explain':
-            self.explain()
+            return self.explain()
         elif self.current_step == 'record':
             return self.record()
     
@@ -51,6 +51,13 @@ class Progress:
     def record(self):
         """Record the current state"""
         self.current_sensor.start()
+
+        while True:
+            key = raw_input("Type 'q' to stop recording: ")
+            if key.lower() == 'q':
+                break
+
+        self.current_sensor.stop()
 
         raw_input("Press any key to continue...")
         return ExperimentalState.RECORD
@@ -145,7 +152,6 @@ class Experiment:
 
     def next(self):
         next_activity = self.activity_sequence.next()
-        print("NEXT ACTIVITY: {}".format(next_activity))
 
         if next_activity is None:
             self.state = ExperimentalState.COMPLETE
@@ -155,7 +161,7 @@ class Experiment:
         self.state = self.progress.next(next_activity)
         self.configuration.update(self.state, self.progress)
 
-        return
+        return self.state
         
 
 

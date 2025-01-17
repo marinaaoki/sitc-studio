@@ -1,5 +1,15 @@
 from enum import Enum 
 
+from sensor_msgs.msg import Image, CameraInfo
+
+SENSOR_CONFIG_FILE = "/media/ubi-lab-desktop/Extreme Pro/kinect/sitc_ws/src/sitc_ak_controller/src/sitc_studio/sensor_config.json"
+TOPICS_FILE = "/media/ubi-lab-desktop/Extreme Pro/kinect/sitc_ws/src/sitc_ak_controller/src/sitc_studio/sensor_topics.json"
+
+TOPIC_TYPES = {
+    "sensor_msgs/Image" : Image,
+    "sensor_msgs/CameraInfo" : CameraInfo
+}
+
 class ExperimentalState(Enum):
     SETUP = 0
     RECORD = 1
@@ -57,8 +67,6 @@ class Activity(Enum):
     CLEAN_BATH = 'CLEAN_BATH', Location.BATH
     JACKET_OFF = 'JACKET_OFF', Location.BEDROOM
     BED_IN = 'BED_IN', Location.BEDROOM
-    
-
 
 
 
