@@ -1,0 +1,12 @@
+{
+    "topics": [
+        {
+            "topic_name": "depth/image_raw",
+            "topic_type": "sensor_msgs/Image"
+        },
+        {
+            "topic_name": "depth/camera_info",
+            "topic_type": "sensor_msgs/CameraInfo"
+        }
+    ]
+}
