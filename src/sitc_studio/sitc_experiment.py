@@ -35,13 +35,19 @@ class Progress:
     
     def explain(self):
         """Idling while the participant receives and explanation of the next activity"""
-        print("ACTIVITY: {}".format(self.current_activity.name))
+        print("==========\nACTIVITY: {}".format(self.current_activity.name))
         print("LOCATION: {}".format(self.current_activity.location))
         print("SENSOR: {}".format(self.current_sensor.sensor_id))
         if self.current_sensor.synced:
             print("SENSOR: {}".format(self.current_sensor.sub_sensor.sensor_id))
+        print("==========")
 
-        inp = raw_input("The next activity is {}. Explain the activity to the participant and answer any questions.\nType 'a' to abort, or press any other key to start recording...".format(self.current_activity.name))
+        print("The next activity is {}. Explain the activity to the participant and answer any questions.".format(self.current_activity.name))
+
+        if self.current_activity.audio_only:
+            print("This activity is AUDIO ONLY. No video data will be saved.")
+
+        inp = raw_input("Type 'a' to abort, or press any other key to start recording...".format(self.current_activity.name))
 
         if inp == 'a':
             return ExperimentalState.ABORT

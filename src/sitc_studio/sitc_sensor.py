@@ -7,7 +7,6 @@ import rosbag
 import threading
 
 class Kinect(object):
-    
 
     def __init__(self, participant_id, sensor_id, sensor_sn, activity, location, save_loc, synced=False):
         self.participant_id = participant_id
@@ -56,6 +55,9 @@ class Kinect(object):
         if not os.path.exists("%s" % self.bag_name_app):
             os.makedirs("%s" % self.bag_name_app)
 
+        if self.activity.audio_only:
+            return
+
         self.is_recording = True
         
         for topic, topic_type in self.topics.items():
@@ -83,6 +85,9 @@ class Kinect(object):
     def stop(self):
         """Stop the ROS subscriber"""
         self.is_recording = False
+
+        if self.activity.audio_only:
+            return
 
         for subscriber in self.subscribers:
             subscriber.unregister()

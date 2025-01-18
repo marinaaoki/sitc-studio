@@ -42,16 +42,17 @@ class Activity(Enum):
         obj._value_ = value
         obj.description = description
         obj.location = location
+        obj.audio_only = True if description == 'VACUUM' or description == 'PC' else False
         obj.synced = True if location != Location.BATH and location != Location.ENTRANCE and location != Location.SINK else False
         return obj 
 
-    __order__ = 'BED_OUT JACKET_ON WATER FRIDGE_OPEN FRIDGE_CLOSE PREPARE_MEAL EAT SIT_DOWN WATCH_TV STAND_UP FALL_DOWN SHOES_ON LEAVE_HOUSE ENTER_HOUSE SHOES_OFF BRUSH_TEETH TAKE_BATH CLEAN_BATH JACKET_OFF BED_IN'
+    __order__ = 'BED_OUT JACKET_ON FRIDGE_OPEN FRIDGE_CLOSE PREPARE_MEAL WATER EAT SIT_DOWN WATCH_TV STAND_UP FALL_DOWN SHOES_ON LEAVE_HOUSE ENTER_HOUSE SHOES_OFF BRUSH_TEETH TAKE_BATH CLEAN_BATH VACUUM PC JACKET_OFF BED_IN'
     BED_OUT = 'BED_OUT', Location.BEDROOM
     JACKET_ON = 'JACKET_ON', Location.BEDROOM
-    WATER = 'WATER', Location.KITCHEN
     FRIDGE_OPEN = 'FRIDGE_OPEN', Location.KITCHEN
     FRIDGE_CLOSE = 'FRIDGE_CLOSE', Location.KITCHEN
     PREPARE_MEAL = 'PREPARE_MEAL', Location.KITCHEN
+    WATER = 'WATER', Location.DINING
     EAT = 'EAT', Location.DINING
     SIT_DOWN = 'SIT_DOWN', Location.LIVING
     WATCH_TV = 'WATCH_TV', Location.LIVING
@@ -64,6 +65,8 @@ class Activity(Enum):
     BRUSH_TEETH = 'BRUSH_TEETH', Location.BATH
     TAKE_BATH = 'TAKE_BATH', Location.BATH
     CLEAN_BATH = 'CLEAN_BATH', Location.BATH
+    VACUUM = 'VACUUM', Location.BEDROOM
+    PC = 'PC', Location.BEDROOM
     JACKET_OFF = 'JACKET_OFF', Location.BEDROOM
     BED_IN = 'BED_IN', Location.BEDROOM
 
