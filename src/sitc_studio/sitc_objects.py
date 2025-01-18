@@ -4,6 +4,7 @@ from sensor_msgs.msg import Image, CameraInfo
 
 SENSOR_CONFIG_FILE = "/media/ubi-lab-desktop/Extreme Pro/kinect/sitc_ws/src/sitc_ak_controller/src/sitc_studio/sensor_config.json"
 TOPICS_FILE = "/media/ubi-lab-desktop/Extreme Pro/kinect/sitc_ws/src/sitc_ak_controller/src/sitc_studio/sensor_topics.json"
+DEFAULT_SAVE = "/media/ubi-lab-desktop/Extreme Pro/kinect/data"
 
 TOPIC_TYPES = {
     "sensor_msgs/Image" : Image,

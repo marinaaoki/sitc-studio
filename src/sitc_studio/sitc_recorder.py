@@ -35,18 +35,16 @@ class SmartHomeStudio:
 
     def start_experiment(self):
         """Start an experiment with a new participant"""
-        save_loc = None
+        debug = raw_input("Enter debug mode (t/F): ")
 
-        debug = raw_input("Enter debug mode (T/F): ")
-
-        if debug is "T":
+        if debug.lower() == "t":
             debug = True
             participant_id = 99
         else:
             debug = False
             participant_id = get_next_participant_id()
-            change = raw_input("Auto-generated participant ID: {}. Do you want to change it? (Y/N)".format(participant_id))
-            if change == "Y":
+            change = raw_input("Auto-generated participant ID: {}. Do you want to change it? (y/N)".format(participant_id))
+            if change.lower() == "y":
                 participant_id = input("Enter the participant ID: ")
 
         self.experiment = Experiment.from_participant_id(participant_id)

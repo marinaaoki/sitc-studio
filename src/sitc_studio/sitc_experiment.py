@@ -1,4 +1,4 @@
-from sitc_studio.sitc_objects import Activity, Location, ExperimentalState
+from sitc_studio.sitc_objects import Activity, Location, ExperimentalState, DEFAULT_SAVE
 from sitc_sensor import Kinect
 from sitc_utils import init_sequence, init_recording_loop
 
@@ -70,8 +70,6 @@ class Progress:
 
     
 class Configuration:
-    DEFAULT_SAVE = "/media/ubi-lab-desktop/Extreme Pro/kinect/data"
-
     def __init__(self, participant_id, state, start_time=None, end_time=None, progress=None, save_loc=DEFAULT_SAVE, debug=False):
         """Configuration is used to save and load the progress of experiments that may have been interrupted."""
         self.activities = [a for a in Activity]

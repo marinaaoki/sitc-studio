@@ -1,7 +1,14 @@
-from itertools import chain, cycle, compress
+import os
 
-def get_next_participant_id():
-    pass
+from itertools import cycle, compress
+from sitc_objects import DEFAULT_SAVE
+
+def get_next_participant_id(save_loc=DEFAULT_SAVE):
+    participant_id = 1
+    while True:
+        if not os.path.exists("%s/Person%03d" % (save_loc, participant_id)):
+            return participant_id
+        participant_id += 1
 
 def init_sequence(activities, selectors):
     if selectors is None:
