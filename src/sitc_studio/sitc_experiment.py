@@ -2,8 +2,10 @@ from sitc_studio.sitc_objects import Activity, Location, ExperimentalState, DEFA
 from sitc_sensor import Kinect
 from sitc_utils import init_sequence, init_recording_loop
 
+import os
 import time
 import rospy
+import pandas as pd
 
 class Progress:
     def __init__(self, participant_id, save_loc=None):
@@ -16,11 +18,6 @@ class Progress:
         self.recording_loop = init_recording_loop('explain')
         self.current_step = None
 
-    def save(self):
-        pass
-
-    def load(self):
-        pass
 
     def next(self, activity):
         """Progress to the next state and perform required tasks. Returns the new state."""
@@ -29,7 +26,11 @@ class Progress:
         self.current_step = self.recording_loop.next()
         
         if self.current_step == 'explain':
-            return self.explain()
+            ret = self.explain()
+            if ret == ExperimentalState.EXPLAIN:
+                self.record()
+            else:
+                return ret
         elif self.current_step == 'record':
             return self.record()
     
@@ -51,8 +52,8 @@ class Progress:
 
         if inp == 'a':
             return ExperimentalState.ABORT
-
-        self.next(self.current_activity)
+        
+        return ExperimentalState.EXPLAIN
 
     def record(self):
         """Record the current state"""
@@ -67,6 +68,9 @@ class Progress:
 
         raw_input("Press any key to continue...")
         return ExperimentalState.RECORD
+    
+    def __str__(self):
+        return str(self.current_activity)
 
     
 class Configuration:
@@ -109,23 +113,35 @@ class Configuration:
         debug = None
         return cls(participant_id, ExperimentalState.COMPLETE, start_time, end_time, progress, save_loc, debug)
 
+
     def update(self, state, progress):
         self.state = state
         self.progress = progress
         if state == ExperimentalState.COMPLETE and not self.debug:
             self.end_time = time.time()
-            self.save()
-        elif state == ExperimentalState.ABORT and not self.debug:
+        
+        if not self.debug:
             self.save()
 
     
     def save(self):
-        # TODO: save progress to experiment_config.json
-        # this should include the participant id, last reached activity, and the current state along with the progress in the recording loop if the state is RECORD
-        # this is a csv file that is updated using pandas as a database of all experiments
-        pass
+        if not os.path.exists("%s/experiment_config.csv" % self.save_loc):
+            df = pd.DataFrame(columns=['participant_id', 'start_time', 'end_time', 'latest_state', 'latest_activity'])
+            df.to_csv("%s/experiment_config.csv" % self.save_loc, index=False)
+
+        df = pd.read_csv("%s/experiment_config.csv" % self.save_loc)
+        row = {'participant_id': self.participant_id, 'start_time': self.start_time, 'end_time': self.end_time, 'latest_state': int(self.state), 'latest_activity': self.progress}
+        # overwrite the row for this participant if it exists otherwise append
+        df = df[df['participant_id'] != self.participant_id]
+        df = df.append(row, ignore_index=True)
+        df.to_csv("%s/experiment_config.csv" % self.save_loc, index=False)
+        print("Experiment config saved for participant {}".format(self.participant_id))
 
     def load(self):
+        pass
+
+    def delete(self):
+        # TODO: delete the row in experiment_config.csv that corresponds to this participant
         pass
 
 
@@ -141,9 +157,10 @@ class Experiment:
     
     @classmethod
     def from_participant_id(cls, participant_id):
-        # TODO: check if participant id exists. if yes, then we are resuming an experiment
-        # if not, we are starting a new experiment
-        return cls(Configuration.from_start(participant_id), init_sequence([a for a in Activity], None))
+        if not os.path.exists("%s/Person%03d" % (DEFAULT_SAVE, participant_id)):
+            return cls(Configuration.from_start(participant_id), init_sequence([a for a in Activity], None))
+        else:
+            return cls(Configuration.from_resume(participant_id), init_sequence([a for a in Activity], None))
     
     def save(self):
         self.configuration.save()
@@ -152,7 +169,16 @@ class Experiment:
         pass
     
     def delete(self):
-        pass
+        dirs = os.listdir("%s/Person%03d" % (self.configuration.save_loc, self.configuration.participant_id))
+        for d in dirs:
+            files = os.listdir("%s/Person%03d/%s" % (self.configuration.save_loc, self.configuration.participant_id, d))
+            for f in files:
+                os.remove("%s/Person%03d/%s/%s" % (self.configuration.save_loc, self.configuration.participant_id, d, f))
+            os.rmdir("%s/Person%03d/%s" % (self.configuration.save_loc, self.configuration.participant_id, d))
+
+        os.rmdir("%s/Person%03d" % (self.configuration.save_loc, self.configuration.participant_id))
+
+        self.configuration.delete()
 
     def next(self):
         try:
@@ -166,6 +192,8 @@ class Experiment:
             return self.state
 
         self.state = self.progress.next(next_activity)
+        if self.state == None:
+            self.state = ExperimentalState.EXPLAIN
         self.configuration.update(self.state, self.progress)
 
         return self.state

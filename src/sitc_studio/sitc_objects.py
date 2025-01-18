@@ -1,4 +1,4 @@
-from enum import Enum 
+from enum import IntEnum, Enum 
 
 from sensor_msgs.msg import Image, CameraInfo
 
@@ -11,12 +11,13 @@ TOPIC_TYPES = {
     "sensor_msgs/CameraInfo" : CameraInfo
 }
 
-class ExperimentalState(Enum):
+class ExperimentalState(IntEnum):
     SETUP = 0
-    RECORD = 1
-    ABORT = 2
-    RESUME = 3
-    COMPLETE = 4
+    EXPLAIN = 1
+    RECORD = 2
+    ABORT = 3
+    RESUME = 4
+    COMPLETE = 5
     ERROR = 99
 
 
@@ -70,6 +71,9 @@ class Activity(Enum):
     PC = 'PC', Location.BEDROOM
     JACKET_OFF = 'JACKET_OFF', Location.BEDROOM
     BED_IN = 'BED_IN', Location.BEDROOM
+
+    def __str__(self):
+        return self.description
 
 
 
