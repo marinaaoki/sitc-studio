@@ -47,7 +47,7 @@ class SmartHomeStudio:
             if change.lower() == "y":
                 participant_id = input("Enter the participant ID: ")
 
-        self.experiment = Experiment.from_participant_id(participant_id)
+        self.experiment = Experiment.from_participant_id(participant_id, debug)
         self.experiment.save()
 
         print("Experiment started for participant {}".format(participant_id))

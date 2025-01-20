@@ -24,13 +24,10 @@ class Progress:
         self.current_activity = activity
         self.current_sensor = Kinect.from_activity(self.participant_id, activity, self.save_loc)
         self.current_step = self.recording_loop.next()
+        print("Current step: {}".format(self.current_step))
         
         if self.current_step == 'explain':
-            ret = self.explain()
-            if ret == ExperimentalState.EXPLAIN:
-                self.record()
-            else:
-                return ret
+            return self.explain()
         elif self.current_step == 'record':
             return self.record()
     
@@ -146,9 +143,10 @@ class Configuration:
 
 
 class Experiment:
-    def __init__(self, configuration, activity_sequence=None):
+    def __init__(self, configuration, activity_sequence=None, debug=False):
         self.configuration = configuration
         self.activity_sequence = activity_sequence
+        self.debug = debug
 
         self.state = configuration.state
         self.progress = configuration.progress
@@ -156,8 +154,8 @@ class Experiment:
         rospy.init_node('sitc_experiment', anonymous=True)
     
     @classmethod
-    def from_participant_id(cls, participant_id):
-        if not os.path.exists("%s/Person%03d" % (DEFAULT_SAVE, participant_id)):
+    def from_participant_id(cls, participant_id, debug=False):
+        if not os.path.exists("%s/Person%03d" % (DEFAULT_SAVE, participant_id)) or debug:
             return cls(Configuration.from_start(participant_id), init_sequence([a for a in Activity], None))
         else:
             return cls(Configuration.from_resume(participant_id), init_sequence([a for a in Activity], None))
@@ -194,6 +192,11 @@ class Experiment:
         self.state = self.progress.next(next_activity)
         if self.state == None:
             self.state = ExperimentalState.EXPLAIN
+
+        # Record the activity after explaining without progressing to the next activity
+        if self.state == ExperimentalState.EXPLAIN:
+            self.state = self.progress.next(next_activity)
+
         self.configuration.update(self.state, self.progress)
 
         return self.state

@@ -44,11 +44,11 @@ class Activity(Enum):
         obj._value_ = value
         obj.description = description
         obj.location = location
-        obj.audio_only = True if description == 'VACUUM' or description == 'PC' else False
+        obj.audio_only = True if description == 'VACUUM' or description == 'PC' or description == 'WALK' else False
         obj.synced = True if location != Location.BATH and location != Location.ENTRANCE and location != Location.SINK else False
         return obj 
 
-    __order__ = 'BED_OUT JACKET_ON FRIDGE_OPEN FRIDGE_CLOSE PREPARE_MEAL WATER EAT SIT_DOWN WATCH_TV STAND_UP FALL_DOWN SHOES_ON LEAVE_HOUSE ENTER_HOUSE SHOES_OFF BRUSH_TEETH TAKE_BATH CLEAN_BATH VACUUM PC JACKET_OFF BED_IN'
+    __order__ = 'BED_OUT JACKET_ON FRIDGE_OPEN FRIDGE_CLOSE PREPARE_MEAL WATER EAT SIT_DOWN WATCH_TV STAND_UP FALL_DOWN WALK SHOES_ON LEAVE_HOUSE ENTER_HOUSE SHOES_OFF BRUSH_TEETH TAKE_BATH CLEAN_BATH VACUUM PC JACKET_OFF BED_IN'
     BED_OUT = 'BED_OUT', Location.BEDROOM
     JACKET_ON = 'JACKET_ON', Location.BEDROOM
     FRIDGE_OPEN = 'FRIDGE_OPEN', Location.KITCHEN
@@ -60,6 +60,7 @@ class Activity(Enum):
     WATCH_TV = 'WATCH_TV', Location.LIVING
     STAND_UP = 'STAND_UP', Location.LIVING
     FALL_DOWN = 'FALL_DOWN', Location.LIVING
+    WALK = 'WALK', Location.LIVING
     SHOES_ON = 'SHOES_ON', Location.ENTRANCE
     LEAVE_HOUSE = 'LEAVE_HOUSE', Location.ENTRANCE
     ENTER_HOUSE = 'ENTER_HOUSE', Location.ENTRANCE

@@ -52,11 +52,11 @@ class Kinect(object):
     
     def start(self):
         """Launch the ROS subscriber for this Kinect sensor topic"""
-        if not os.path.exists("%s" % self.bag_name_app):
-            os.makedirs("%s" % self.bag_name_app)
-
         if self.activity.audio_only:
             return
+        
+        if not os.path.exists("%s" % self.bag_name_app):
+            os.makedirs("%s" % self.bag_name_app)
 
         self.is_recording = True
         
