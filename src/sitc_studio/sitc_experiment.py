@@ -108,7 +108,7 @@ class Configuration:
     
     @classmethod
     def from_complete(cls, participant_id, save_loc=DEFAULT_SAVE):
-        config_path = f"{save_loc}/experiment_config.csv"
+        config_path = "{}/experiment_config.csv".format(save_loc)
 
         if not os.path.exists(config_path):
             print("Configuration file not found at {}".format(config_path))
@@ -117,7 +117,7 @@ class Configuration:
         row = df[df['participant_id'] == participant_id]
 
         if row.empty:
-            raise print("No saved progress found for participant {}".format(participant_id))
+            print("No saved progress found for participant {}".format(participant_id))
 
         row = row.iloc[0]
         start_time = row['start_time'] if not pd.isna(row['start_time']) else None
@@ -160,31 +160,42 @@ class Configuration:
         print("Experiment config saved for participant {}".format(self.participant_id))
 
     def load(self):
-        config_path = f"{self.save_loc}/experiment_config.csv"
+        config_path = "{}/experiment_config.csv".format(self.save_loc)
         if not os.path.exists(config_path):
             print("Configuration file not found at {}".format(config_path))
+            return None
+        try:
+            df = pd.read_csv(config_path)
+            row = df[df['participant_id'] == self.participant_id]
+            for row in df:
+                print(row)
 
-        df = pd.read_csv(config_path)
-        row = df[df['participant_id'] == self.participant_id]
+            if row.empty:
+                print("No saved progress found for participant {}".format(self.participant_id))
 
-        if row.empty:
-            print("No saved progress found for participant {}".format(self.participant_id))
-
-        row = row.iloc[0]
-        self.start_time = row['start_time'] if not pd.isna(row['start_time']) else None
-        self.end_time = row['end_time'] if not pd.isna(row['end_time']) else None
-        self.state = ExperimentalState(int(row['latest_state']))
-        self.progress = row['latest_activity'] 
-
-        print("Loaded configuration for participant {}".format(self.participant_id))
+            row = row.iloc[0]
+            self.start_time = row['start_time'] if not pd.isna(row['start_time']) else None
+            self.end_time = row['end_time'] if not pd.isna(row['end_time']) else None
+            self.state = ExperimentalState(int(row['latest_state']))
+            self.progress = row['latest_activity'] 
+            print(row)
+            print("Loaded configuration for participant {}".format(self.participant_id))
+            return row
+        except Exception as e:
+            print("Error loading configuration: {}".format(e))
+            return None
 
     def delete(self):
-        config_path = f"{self.save_loc}/experiment_config.csv"
-        if os.path.exists(config_path):
-            df = pd.read_csv(config_path)
-            df = df[df['participant_id'] != self.participant_id]
-            df.to_csv(config_path, index=False)
-            print("Deleted configuration for participant {}".format(self.participant_id))
+        config_path = "{}/experiment_config.csv".format(self.save_loc)
+        try:
+            if os.path.exists(config_path):
+                df = pd.read_csv(config_path)
+                df = df[df['participant_id'] != self.participant_id]
+                df.to_csv(config_path, index=False)
+                print("Deleted configuration for participant {}".format(self.participant_id))
+        except Exception as e:
+            print("Error deleting configuration: {}".format(e))
+            return None
 
 
 class Experiment:
