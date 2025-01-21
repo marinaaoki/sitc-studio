@@ -4,7 +4,7 @@ from sensor_msgs.msg import Image, CameraInfo
 
 SENSOR_CONFIG_FILE = "/media/ubi-lab-desktop/Extreme Pro/kinect/sitc_ws/src/sitc_ak_controller/src/sitc_studio/sensor_config.json"
 TOPICS_FILE = "/media/ubi-lab-desktop/Extreme Pro/kinect/sitc_ws/src/sitc_ak_controller/src/sitc_studio/sensor_topics.json"
-DEFAULT_SAVE = "/media/ubi-lab-desktop/Extreme Pro/kinect/data"
+DEFAULT_SAVE = "/media/ubi-lab-desktop/disk6s2/sitc_data"
 
 TOPIC_TYPES = {
     "sensor_msgs/Image" : Image,
@@ -65,7 +65,7 @@ class Activity(Enum):
     LEAVE_HOUSE = 'LEAVE_HOUSE', Location.ENTRANCE
     ENTER_HOUSE = 'ENTER_HOUSE', Location.ENTRANCE
     SHOES_OFF = 'SHOES_OFF', Location.ENTRANCE
-    BRUSH_TEETH = 'BRUSH_TEETH', Location.BATH
+    BRUSH_TEETH = 'BRUSH_TEETH', Location.SINK
     TAKE_BATH = 'TAKE_BATH', Location.BATH
     CLEAN_BATH = 'CLEAN_BATH', Location.BATH
     VACUUM = 'VACUUM', Location.BEDROOM
