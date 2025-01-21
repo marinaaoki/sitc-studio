@@ -64,9 +64,10 @@ class SmartHomeStudio:
         """Load an experiment"""
         participant_id = input("Which participant ID would you like to load? ")
         self.experiment = Experiment.from_participant_id(participant_id)
-        self.experiment.load()
 
-        print("Experiment loaded for participant {}. Resuming recording...".format(participant_id))
+        print("Experiment loaded for participant {}.".format(participant_id))
+        print("Press any key to resume...")
+        raw_input()
 
         self.recording_loop()
 
