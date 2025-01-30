@@ -94,7 +94,10 @@ class Kinect(object):
         self.subscribers = []
 
         for bag in self.bags:
-            bag.close()
+            try:
+                bag.close()
+            except:
+                print("Error closing bag.")
         self.bags = []
 
         if self.synced:

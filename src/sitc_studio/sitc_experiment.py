@@ -24,7 +24,6 @@ class Progress:
         self.current_activity = activity
         self.current_sensor = Kinect.from_activity(self.participant_id, activity, self.save_loc)
         self.current_step = self.recording_loop.next()
-        print("Current step: {}".format(self.current_step))
         
         if self.current_step == 'explain':
             return self.explain()
@@ -96,31 +95,8 @@ class Configuration:
     @classmethod
     def from_resume(cls, participant_id, save_loc=DEFAULT_SAVE):
         config = cls(participant_id, ExperimentalState.RESUME, save_loc=save_loc)
-        # configure time in load method
         config.load() 
         return config
-    
-    @classmethod
-    def from_complete(cls, participant_id, save_loc=DEFAULT_SAVE):
-        config_path = "{}/experiment_config.csv".format(save_loc)
-
-        if not os.path.exists(config_path):
-            print("Configuration file not found at {}".format(config_path))
-
-        df = pd.read_csv(config_path)
-        row = df[df['participant_id'] == participant_id]
-
-        if row.empty:
-            print("No saved progress found for participant {}".format(participant_id))
-
-        row = row.iloc[0]
-        start_time = row['start_time'] if not pd.isna(row['start_time']) else None
-        end_time = row['end_time'] if not pd.isna(row['end_time']) else None
-        progress = row['latest_activity'] 
-        debug = True  
-
-        return cls(participant_id, ExperimentalState.COMPLETE, start_time, end_time, progress, save_loc, debug)
-
 
     def update(self, state, progress):
         self.state = state
@@ -144,6 +120,7 @@ class Configuration:
         df = df.append(row, ignore_index=True)
         df.to_csv("%s/experiment_config.csv" % self.save_loc, index=False)
         print("Experiment config saved for participant {}".format(self.participant_id))
+
 
     def load(self):
         config_path = "{}/experiment_config.csv".format(self.save_loc)
@@ -171,10 +148,8 @@ class Configuration:
             for a in activites:
                 if self.latest_activity != a.name and not already_done:
                     self.selected_activities.append(0)
-                elif self.latest_activity == a.name:
-                    already_done = True
-                    self.selected_activities.append(0)
                 else:
+                    already_done = True
                     self.selected_activities.append(1)
             return row
         except Exception as e:
@@ -244,8 +219,6 @@ class Experiment:
             return self.state
 
         self.state = self.progress.next(next_activity)
-        if self.state == None:
-            self.state = ExperimentalState.EXPLAIN
 
         # Record the activity after explaining without progressing to the next activity
         if self.state == ExperimentalState.EXPLAIN:
