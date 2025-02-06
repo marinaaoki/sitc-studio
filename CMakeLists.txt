@@ -163,6 +163,7 @@ catkin_install_python(PROGRAMS
   scripts/launch_experiment.py
   scripts/read_bag.py
   scripts/extract_bag_as_png.py
+  scripts/crop_sequence.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
